@@ -4,27 +4,110 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 import csv
 from time import localtime
+import pandas as pd
+from statsmodels.tsa.ar_model import AR
+from sklearn.metrics import mean_squared_error as mse
 
 
 class DataAnalysis(object):
-    """docstring forDataAnalysis."""
-    def __init__(self, date, price, oprice, volume, method= 'poly', ord= 5):
+    """
+    Including mutiple methods for data analysis:
+
+    AutoRegressive: Price prediction with AR model
+        data (float): History price data used for predicting future price
+        testSize (int): Time period for prediction
+        test (boolean): If True, examine prediction accuracy with test set
+                        If False, predict future price for period of testSize
+
+    Corr: Cauculate moving correlation between two inputs
+        stat1, stat2 (float): data of two variables used for calculating correlation
+        winSize (int): Window size for calculating correlation
+
+    dailyChange: Calculate everyday price change percent with respect to openPrice
+        openPrice, closePrice (float): price data
+
+    fit: Fitting real data points to a smooth curve
+        method (str):
+                poly - polynomial curve
+                exp  - expotential curve
+                sin  - sine curve
+                log  - logarithmic curve
+        ord (int): polynomial order (other method would ignore this parameter)
+
+    movingStat: Calculating moving average and moving variance of original data
+        size (int): Window size used for calculating moving average and variance
+
+    raiseOrfall: Calculate increment or decrement in a period of time
+        data (float): Price data
+        winSize (int): Time period
+
+    separate: Separate increase data and decrease data and give them different color
+        data (float): Price change data
+        position (int): start date of each period
+
+    ticks: Generate ticks for xlabel
+        tick (str): date
+        interval (int): period between two successive ticks
+
+    display: Plot graghs of analysis data
+    """
+    def __init__(self, date, price, oprice, volume, method= 'poly', ord= 5, testSize= 30, test= True):
         super(DataAnalysis, self).__init__()
         self.price = price
         self.oprice = oprice
+        self.oridate = date
         self.date, self.tickPos = self.ticks(date, 60)
         self.volume = volume
         self.method = method
         self.ord = ord
+        self.testSize = testSize
+        self.test = test
         self.avePrice, self.varPrice = self.movingStat(10)
         self.aveVar = self.avePrice + self.varPrice
         self.dailyC = self.dailyChange(self.oprice, self.price)
         self.corr = self.Corr(self.price, self.volume)
         self.fitValue = self.fit(method, ord)
-        self.support, self.resistance = self.trendLine()
+        # self.support, self.resistance = self.trendLine()
         self.perc, self.pos = self.raiseOrfall(self.avePrice)
         self.volume = [1e-5 * p for p in self.volume]
         self.r, self.rPos, self.d, self.dPos = self.separate(self.perc, self.pos)
+        self.prediction = self.AutoRegressive(self.price, self.oridate, self.testSize, self.test)
+
+    def AutoRegressive(self, data, date, testSize= 30, test= True):
+        # Autoregressive model used for time-series predictions
+        # if test= True, then select the last testSize points as test set
+        # else predict for a period of testSize
+        data = np.array(data)
+        if test:
+            trainData = data[:-testSize]
+            testData = data[-testSize:]
+        else:
+            trainData = data
+
+        model = AR(trainData)
+        modelFit = model.fit()
+        winSize, coeff = modelFit.k_ar, modelFit.params
+
+        predData = list(trainData[-winSize:])
+        pred = []
+        for i in range(testSize):
+            x = list(predData[-winSize:])
+            y = coeff[0]
+            for n in range(winSize):
+                y += coeff[n+1] * x[winSize-(n+1)]
+            if test:
+                predData.append(testData[i])
+            else:
+                predData.append(y)
+            pred.append(y)
+
+        if test:
+            error = mse(testData, pred)
+            return pred, error, testData
+        else:
+            error = None
+            return pred, error
+
 
     def Corr(self, stat1, stat2, winSize= 10):
         corr = []
@@ -117,7 +200,7 @@ class DataAnalysis(object):
                 tickPos.append(i)
         return newTick, tickPos
 
-    def trendLine(self):
+    # def trendLine(self):
         maxPts, minPts = [], []
         for i in range(len(self.price)):
             if i >= 1 and i <= len(self.price)-2:
@@ -136,8 +219,8 @@ class DataAnalysis(object):
         # Price polt
         # Original price, averaged price and its fitting curve
         n = np.arange(len(self.price))
-        supLine = len(n) * [self.support]
-        resLine = len(n) * [self.resistance]
+        # supLine = len(n) * [self.support]
+        # resLine = len(n) * [self.resistance]
         plt.plot(n, self.price, 'k.-', label= 'Original price')
         plt.plot(n, self.avePrice, 'r-', label= 'Moving average')
         plt.plot(n, self.fitValue, 'b-', label= 'Fitting curve')
@@ -181,36 +264,55 @@ class DataAnalysis(object):
         plt.grid(True)
         plt.show()
 
-        # plt.figure(3)
-        # n = np.arange(len(self.price))
-        # # plt.plot(n, self.price, 'k.-', linewidth= 0.5, label= 'Price')
-        # # plt.plot(n, self.volume, 'b.-', linewidth= 0.5, label= 'Volume')
-        # plt.plot(n, self.corr, 'r--', linewidth= 1.5, label= 'Correlation')
-        # plt.title('Correlation between price and volume')
-        # plt.xticks(self.tickPos, self.date)
-        # plt.xlabel('date')
-        # plt.ylabel('Correlation')
-        # plt.legend()
-        # plt.show()
+        plt.subplots()
+        if self.test:
+            pred, error, testData = self.prediction
+            n = np.arange(len(pred))
+            plt.plot(n, testData, 'b-', label= 'Real price')
+            plt.plot(n, pred, 'r-', label= 'Prediction')
+            plt.title('Price prediction with error= %.2f' %error)
+            plt.xlabel('Time / days')
+            plt.ylabel('Price / USD')
+            plt.legend()
+            plt.grid(True)
+            plt.show()
+        else:
+            pred, error = self.prediction
+            n = np.arange(len(pred))
+            plt.plot(n, pred, 'r-', label= 'Prediction')
+            plt.title('Price prediction for %d days' % self.testSize)
+            plt.xlabel('Time / days')
+            ple.ylabel('Price / USD')
+            plt.legend()
+            plt.grid(True)
+            plt.show()
+
+
+
+
+
 # Load data:
 # data: str, used for x-axis ticks.
 # price: float
 # volume: float
-Path = './CryptoCurrency/'
+# oprice: float
+Path = '../CryptoCurrency/'
 fileName = 'ethereum'
 with open(Path + fileName + '.csv','r') as csvfile:
     reader = csv.reader(csvfile)
-    date = [row[1] for row in reader]
+    date = [row[1] for row in reader] # Please input column index of date
 with open(Path + fileName + '.csv','r') as csvfile:
     reader = csv.reader(csvfile)
-    price = [row[2] for row in reader]
+    price = [row[2] for row in reader] # Please input column index of close
 with open(Path + fileName + '.csv','r') as csvfile:
     reader = csv.reader(csvfile)
-    volume = [row[6] for row in reader]
+    volume = [row[6] for row in reader] # Please input column index of volume
 with open(Path + fileName + '.csv','r') as csvfile:
     reader = csv.reader(csvfile)
-    oprice = [row[5] for row in reader]
+    oprice = [row[5] for row in reader] # Please input column index of open
+
 # Select the last period percent of the whole dataset.
+# If using clean datasets, please use full data with period= 1
 period = 0.4
 start = -1 * int(period * (len(price) - 1))
 date = date[start:]
@@ -218,5 +320,5 @@ price = [float(p) for p in price[start:]]
 volume = [float(v) for v in volume[start:]]
 oprice = [float(o) for o in oprice[start:]]
 
-dataAnalysit = DataAnalysis(date, price, oprice, volume, method= 'poly', ord= 10)
+dataAnalysit = DataAnalysis(date, price, oprice, volume, method= 'poly', ord= 10, testSize= 30, test= True)
 dataAnalysit.display()
