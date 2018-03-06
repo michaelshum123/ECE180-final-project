@@ -71,7 +71,7 @@ class DataAnalysis(object):
         self.perc, self.pos = self.raiseOrfall(self.avePrice)
         self.volume = [1e-5 * p for p in self.volume]
         self.r, self.rPos, self.d, self.dPos = self.separate(self.perc, self.pos)
-        self.prediction = self.AutoRegressive(self.price, self.oridate, self.testSize, self.test)
+        # self.prediction = self.AutoRegressive(self.price, self.oridate, self.testSize, self.test)
 
     def AutoRegressive(self, data, date, testSize= 30, test= True):
         # Autoregressive model used for time-series predictions
@@ -223,6 +223,7 @@ class DataAnalysis(object):
         # resLine = len(n) * [self.resistance]
         plt.plot(n, self.price, 'k.-', label= 'Original price')
         plt.plot(n, self.avePrice, 'r-', label= 'Moving average')
+        # plt.plot(n, self.expAve, 'g-', label= 'Expotential average')
         plt.plot(n, self.fitValue, 'b-', label= 'Fitting curve')
         plt.bar(n, self.varPrice, align= 'center', color= 'y', label= 'Moving variance')
         # plt.plot(n, supLine, 'y-', linewidth= 2.0, label= 'Support line')
@@ -296,29 +297,37 @@ class DataAnalysis(object):
 # price: float
 # volume: float
 # oprice: float
-Path = '../CryptoCurrency/'
-fileName = 'ethereum'
-with open(Path + fileName + '.csv','r') as csvfile:
-    reader = csv.reader(csvfile)
-    date = [row[1] for row in reader] # Please input column index of date
-with open(Path + fileName + '.csv','r') as csvfile:
-    reader = csv.reader(csvfile)
-    price = [row[2] for row in reader] # Please input column index of close
-with open(Path + fileName + '.csv','r') as csvfile:
-    reader = csv.reader(csvfile)
-    volume = [row[6] for row in reader] # Please input column index of volume
-with open(Path + fileName + '.csv','r') as csvfile:
-    reader = csv.reader(csvfile)
-    oprice = [row[5] for row in reader] # Please input column index of open
+# Path = '../CryptoCurrency/'
+# fileName = 'ethereum'
+# with open(Path + fileName + '.csv','r') as csvfile:
+#     reader = csv.reader(csvfile)
+#     date = [row[1] for row in reader] # Please input column index of date
+# with open(Path + fileName + '.csv','r') as csvfile:
+#     reader = csv.reader(csvfile)
+#     price = [row[2] for row in reader] # Please input column index of close
+# with open(Path + fileName + '.csv','r') as csvfile:
+#     reader = csv.reader(csvfile)
+#     volume = [row[6] for row in reader] # Please input column index of volume
+# with open(Path + fileName + '.csv','r') as csvfile:
+#     reader = csv.reader(csvfile)
+#     oprice = [row[5] for row in reader] # Please input column index of open
+#################################################################################
+Path = './Update/'
+currency = 'BTC'
+period = 'Last_month'
+fname = Path + currency + '_' + period + '_data' + '.csv'
+Data = pd.read_csv(fname)
+openPrice, closePrice, date, volume = Data['open'].values, Data['close'].values, Data['timeDate'].values, Data['volumefrom'].values
+
 
 # Select the last period percent of the whole dataset.
 # If using clean datasets, please use full data with period= 1
-period = 0.4
-start = -1 * int(period * (len(price) - 1))
-date = date[start:]
-price = [float(p) for p in price[start:]]
-volume = [float(v) for v in volume[start:]]
-oprice = [float(o) for o in oprice[start:]]
+# period = 0.4
+# start = -1 * int(period * (len(price) - 1))
+# date = date[start:]
+# price = [float(p) for p in price[start:]]
+# volume = [float(v) for v in volume[start:]]
+# oprice = [float(o) for o in oprice[start:]]
 
-dataAnalysit = DataAnalysis(date, price, oprice, volume, method= 'poly', ord= 10, testSize= 30, test= True)
+dataAnalysit = DataAnalysis(date, closePrice, openPrice, volume, method= 'poly', ord= 10, testSize= 30, test= True)
 dataAnalysit.display()

@@ -6,6 +6,9 @@ import csv
 #from time import localtime
 from statsmodels.tsa.ar_model import AR
 from sklearn.metrics import mean_squared_error as mse
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.collections import PolyCollection
+from matplotlib import colors as mcolors
 
 
 class DataAnalysis(object):
@@ -65,18 +68,18 @@ class DataAnalysis(object):
         self.aveVar = self.avePrice + self.varPrice
         self.dailyC = self.dailyChange(self.oprice, self.price)
         self.corr = self.Corr(self.price, self.volume)
-        self.fitValue = self.fit(method, ord)
+        self.fitValue = self.fit(method, self.ord)
         # self.support, self.resistance = self.trendLine()
         self.perc, self.pos = self.raiseOrfall(self.avePrice)
         self.volume = [1e-5 * p for p in self.volume]
         self.r, self.rPos, self.d, self.dPos = self.separate(self.perc, self.pos)
-        self.prediction = self.AutoRegressive(self.price, self.oridate, self.testSize, self.test)
+        self.prediction = self.AutoRegressive(self.price, self.testSize, self.test)
 
-    def AutoRegressive(self, data, date, testSize=30, test=True):
+    def AutoRegressive(self, data, testSize=2, test=True):
         # Autoregressive model used for time-series predictions
         # if test= True, then select the last testSize points as test set
         # else predict for a period of testSize
-        data = np.array(data)
+        print(data.shape)
         if test:
             trainData = data[:-testSize]
             testData = data[-testSize:]
@@ -296,7 +299,8 @@ class DataAnalysis(object):
 # price: float
 # volume: float
 # oprice: float
-# Path = '../CryptoCurrency/'
+
+Path = './Update/'
 Path = './'
 fileName = 'bitcoin_clean_data' # example of bitcoin
 with open(Path + fileName + '.csv', 'r') as csvfile:
@@ -312,8 +316,8 @@ with open(Path + fileName + '.csv', 'r') as csvfile:
     reader = csv.reader(csvfile)
     oprice = [row[2] for row in reader]  # Please input column index of open
 
-# Select the last period percent of the whole dataset.
-# If using clean datasets, please use full data with period= 1
+Select the last period percent of the whole dataset.
+If using clean datasets, please use full data with period= 1
 period = 0.4
 start = -1 * int(period * (len(price) - 1))
 date = date[start:]
@@ -323,3 +327,89 @@ oprice = [float(o) for o in oprice[start:]]
 
 dataAnalysit = DataAnalysis(date, price, oprice, volume, method='poly', ord=10, testSize=30, test=True)
 dataAnalysit.display()
+############################################3D Visulization Test#####################################################################################
+Path = './Update/'
+Currency = 'BTC'
+Period = 'Half_year'
+fname = (Currency + '_' + Period + '_data.csv')
+
+Data = pd.read_csv(Path + fname)
+openPrice, closePrice, volume, date = Data['open'].values, Data['close'].values, Data['volumefrom'].values, Data['timeDate'].values
+BTC = DataAnalysis(date, closePrice, openPrice, volume)
+#################################################################################################################################################
+Path = './Update/'
+Currency = 'DASH'
+Period = 'Half_year'
+fname = (Path + Currency + '_' + Period + '_data.csv')
+
+Data = pd.read_csv(fname)
+openPrice, closePrice, volume, date = Data['open'].values, Data['close'].values, Data['volumefrom'].values, Data['timeDate'].values
+DASH = DataAnalysis(date, closePrice, openPrice, volume)
+#################################################################################################################################################
+Path = './Update/'
+Currency = 'ETH'
+Period = 'Half_year'
+fname = (Path + Currency + '_' + Period + '_data.csv')
+
+Data = pd.read_csv(fname)
+openPrice, closePrice, volume, date = Data['open'].values, Data['close'].values, Data['volumefrom'].values, Data['timeDate'].values
+ETH = DataAnalysis(date, closePrice, openPrice, volume)
+#################################################################################################################################################
+Path = './Update/'
+Currency = 'LTC'
+Period = 'Half_year'
+fname = (Path + Currency + '_' + Period + '_data.csv')
+
+Data = pd.read_csv(fname)
+openPrice, closePrice, volume, date = Data['open'].values, Data['close'].values, Data['volumefrom'].values, Data['timeDate'].values
+LTC = DataAnalysis(date, closePrice, openPrice, volume)
+#################################################################################################################################################
+Path = './Update/'
+Currency = 'ZEC'
+Period = 'Half_year'
+fname = (Path + Currency + '_' + Period + '_data.csv')
+
+Data = pd.read_csv(fname)
+openPrice, closePrice, volume, date = Data['open'].values, Data['close'].values, Data['volumefrom'].values, Data['timeDate'].values
+ZEC = DataAnalysis(date, closePrice, openPrice, volume)
+#################################################################################################################################################
+def cc(arg):
+    return mcolors.to_rgba(arg, alpha=0.6)
+
+BTC_price = BTC.avePrice
+DASH_price = DASH.avePrice
+ETH_price = ETH.avePrice
+LTC_price = LTC.avePrice
+ZEC_price = ZEC.avePrice
+n = np.arange(len(BTC_price))
+z = np.arange(1,6)
+print(z)
+verts = []
+# fig = plt.figure()
+# ax = fig.gca()
+# path_BTC = ax.fill_between(n, BTC_price, 0).getpaths()[0]
+# path_DASH = ax.fill_between(n, DASH_price, 0).getpaths()[0]
+# path_ETH = ax.fill_between(n, ETH_price, 0).getpaths()[0]
+# path_LTC = ax.fill_between(n, LTC_price, 0).getpaths()[0]
+# path_ZCash = ax.fill_between(n, ZCash_price, 0).getpaths()[0]
+fig = plt.figure()
+ax = fig.gca(projection= '3d')
+verts = []
+verts.append(list(zip(n, np.log(BTC_price))))
+verts.append(list(zip(n, np.log(DASH_price))))
+verts.append(list(zip(n, np.log(ETH_price))))
+verts.append(list(zip(n, np.log(LTC_price))))
+verts.append(list(zip(n, np.log(ZEC_price))))
+print(len(verts))
+poly = PolyCollection(verts, facecolors=['r', 'g', 'b','y','k'])
+poly.set_alpha(0.7)
+ax.add_collection3d(poly, zs= z, zdir= 'y')
+ax.set_xlabel('Time / day')
+ax.set_xlim3d(0, 250)
+ax.set_ylabel('CryptoCurrency')
+# ax.set_yticks(np.array(z))
+# ax.set_yticklabels(np.array(z), ['BTC', 'DASH', 'ETH', 'LTC', 'ZEC'], fontsize= 12)
+ax.set_ylim3d(1, 6)
+ax.set_zlabel('Price / USD')
+ax.set_zlim3d(0, 8)
+plt.show()
