@@ -296,7 +296,7 @@ class DataAnalysis(object):
 
 
 ################################################################################
-Path = './Update/' # Please use path based on current dir
+Path = './' # Please use path based on current dir
 Currency = 'BTC'
 Period = '_Half_year'
 fname = Path + Currency + Period + '_data.csv'
@@ -304,7 +304,7 @@ Files = pd.read_csv(fname)
 closePrice, openPrice, Volume, date = Files['close'].values, Files['open'].values, Files['volumefrom'].values, Files['timeDate'].values
 BTC_Module = DataAnalysis(date, closePrice, openPrice, Volume)
 
-Path = './Update/' # Please use path based on current dir
+Path = './' # Please use path based on current dir
 Currency = 'DASH'
 Period = '_Half_year'
 fname = Path + Currency + Period + '_data.csv'
@@ -312,7 +312,7 @@ Files = pd.read_csv(fname)
 closePrice, openPrice, Volume, date = Files['close'].values, Files['open'].values, Files['volumefrom'].values, Files['timeDate'].values
 DASH_Module = DataAnalysis(date, closePrice, openPrice, Volume)
 
-Path = './Update/' # Please use path based on current dir
+Path = './' # Please use path based on current dir
 Currency = 'ETH'
 Period = '_Half_year'
 fname = Path + Currency + Period + '_data.csv'
@@ -320,7 +320,7 @@ Files = pd.read_csv(fname)
 closePrice, openPrice, Volume, date = Files['close'].values, Files['open'].values, Files['volumefrom'].values, Files['timeDate'].values
 ETH_Module = DataAnalysis(date, closePrice, openPrice, Volume)
 
-Path = './Update/' # Please use path based on current dir
+Path = './' # Please use path based on current dir
 Currency = 'LTC'
 Period = '_Half_year'
 fname = Path + Currency + Period + '_data.csv'
@@ -328,7 +328,7 @@ Files = pd.read_csv(fname)
 closePrice, openPrice, Volume, date = Files['close'].values, Files['open'].values, Files['volumefrom'].values, Files['timeDate'].values
 LTC_Module = DataAnalysis(date, closePrice, openPrice, Volume)
 
-Path = './Update/' # Please use path based on current dir
+Path = './' # Please use path based on current dir
 Currency = 'ZEC'
 Period = '_Half_year'
 fname = Path + Currency + Period + '_data.csv'
@@ -383,7 +383,7 @@ def Corr(stat1, stat2, winSize=10):
         corr.append(iCorr)
     return corr
 
-Path = './Update/' # Please use path based on current dir
+Path = './' # Please use path based on current dir
 Stock = 'DJI'
 Period = '_Half_year'
 fname = Path + Stock + Period + '_data.csv'
@@ -400,7 +400,7 @@ dji_corr = Corr(dji_int_values, BTC_Module.price)
 #     dji_corr.append(iCorr)
 
 
-Path = './Update/' # Please use path based on current dir
+Path = './' # Please use path based on current dir
 Stock = 'NASDAQ'
 Period = '_Half_year'
 fname = Path + Stock + Period + '_data.csv'
@@ -416,22 +416,35 @@ nas_int_values = f_dji(nas_new_n)
 #     nas_corr.append(iCorr)
 nas_corr = Corr(nas_int_values, BTC_Module.price)
 
+vol_corr = Corr(BTC_Module.volume, BTC_Module.price)
+
 fig = plt.subplots()
-ax1 = plt.subplot(1,2,1)
-ax1.bar(n, [d * 1e-5 for d in dji_int_values], align= 'edge')
+ax1 = plt.subplot(1,3,1)
+ax1.bar(n, dji_int_values, align= 'edge')
 plt.ylabel('Values')
+plt.title('DJI VS. Price')
 ax2 = ax1.twinx()
 ax2.plot(n, dji_corr, 'r-.', label= 'Correlation')
 plt.xlabel('Date')
 plt.xticks(BTC_Module.tickPos, BTC_Module.date, rotation= 70)
 plt.legend()
-ax3 = plt.subplot(1,2,2)
-ax3.bar(n, [d * 1e-5 for d in nas_int_values], align= 'edge')
+ax3 = plt.subplot(1,3,2)
+ax3.bar(n, nas_int_values, align= 'edge')
 plt.ylabel('Values')
+plt.title('NASDAQ VS. Price')
 ax4 = ax3.twinx()
 ax4.plot(n, nas_corr, 'r-.', label= 'Correlation')
 plt.xlabel('Date')
 plt.xticks(BTC_Module.tickPos, BTC_Module.date, rotation= 70)
 plt.legend()
-plt.suptitle('Correlation with Major Stocks')
+ax5 = plt.subplot(1,3,3)
+ax5.bar(n, BTC_Module.volume, align= 'edge')
+plt.ylabel('Values')
+plt.title('Volume VS. Price')
+ax6 = ax5.twinx()
+ax6.plot(n, vol_corr, 'r-.', label= 'Correlation')
+plt.xlabel('Date')
+plt.xticks(BTC_Module.tickPos, BTC_Module.date, rotation= 70)
+plt.legend()
 plt.show()
+plt.suptitle('Correlation with Major Stocks')
