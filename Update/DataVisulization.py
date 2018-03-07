@@ -351,20 +351,36 @@ def generate():
         months.append(months[i] + monthDays[i])
     return months
 
+def separate(data, idx):
+    red, redP, green, greenP = [], [], [], []
+    for i in idx:
+        if data[i] >= 0:
+            red.append(data[i])
+            redP.append(i)
+        else:
+            green.append(data[i])
+            greenP.append(i)
+    return red, redP, green, greenP
+
+priceC = [BTC_Module.price[i + 1] - BTC_Module.price[i] for i in range(len(BTC_Module.price) - 1)]
+p_red, p_redP, p_green, p_greenP = separate(priceC, np.arange(len(priceC)))
+
 fig = plt.figure()
 ax1 = fig.gca()
 n = np.arange(len(BTC_Module.price))
 BTC_monthly = monthlyPrice(BTC_Module, 7)
 months = generate()
 ax1.fill_between(n, BTC_Module.price, len(BTC_Module.price) * [0], facecolor= 'k', alpha= 0.3)
+ax1.plot(n, BTC_Module.avePrice, 'r--', label= 'BTC Average Price')
+ax1.plot(n, BTC_Module.fitValue, 'b-', label= 'BTC Fitting Curve')
+ax1.plot(months, BTC_monthly, 'g-o', label= 'BTC Monthly Averaging')
 plt.ylim([0, 20000])
 plt.ylabel('Price / USD')
 plt.legend()
 ax2 = ax1.twinx()
-ax2.plot(n, BTC_Module.avePrice, 'r--', label= 'BTC Average Price')
-ax2.plot(n, BTC_Module.fitValue, 'b-', label= 'BTC Fitting Curve')
-ax2.plot(months, BTC_monthly, 'g-o', label= 'BTC Monthly Averaging')
-plt.ylim([0, 20000])
+ax2.bar(p_redP, p_red, color= 'r', align= 'edge')
+ax2.bar(p_greenP, p_green, color= 'g', align= 'edge')
+
 ax2.grid(True)
 plt.title('Price Analysis for BTC')
 plt.xlabel('Date')
@@ -395,7 +411,9 @@ dji_n = np.arange(len(dji_values))
 f_dji = interp1d(dji_n, dji_values)
 dji_new_n = np.linspace(0, len(dji_values) - 1, len(n))
 dji_int_values = f_dji(dji_new_n)
-dji_corr = Corr(dji_int_values, BTC_Module.price)
+dji_int_valuesC = [dji_int_values[i+1] - dji_int_values[i] for i in range(len(dji_int_values) - 1)]
+d_red, d_redP, d_green, d_greenP = separate(dji_int_valuesC, np.arange(len(dji_int_valuesC)))
+dji_corr = Corr(dji_int_valuesC, priceC)
 # dji_corr = []
 # for i in range(len(n)):
 #     iCorr = np.correlate(dji_int_values / np.linalg.norm(dji_int_values), BTC_Module.price / np.linalg.norm(BTC_Module.price))
@@ -412,44 +430,51 @@ nas_n = np.arange(len(nas_values))
 f_nas = interp1d(nas_n, nas_values)
 nas_new_n = np.linspace(0, len(nas_values) - 1, len(n))
 nas_int_values = f_dji(nas_new_n)
+nas_int_valuesC = [nas_int_values[i+1] - nas_int_values[i] for i in range(len(nas_int_values) - 1)]
+n_red, n_redP, n_green, n_greenP = separate(nas_int_valuesC, np.arange(len(nas_int_valuesC)))
+
 # nas_corr = []
 # for i in range(len(n)):
 #     iCorr = np.correlate(nas_int_values / np.linalg.norm(dji_int_values), BTC_Module.price / np.linalg.norm(BTC_Module.price))
 #     nas_corr.append(iCorr)
-nas_corr = Corr(nas_int_values, BTC_Module.price)
-
-vol_corr = Corr(BTC_Module.volume, BTC_Module.price)
-
+nas_corr = Corr(nas_int_valuesC, priceC)
+volumeC = [BTC_Module.volume[i+1] - BTC_Module.volume[i] for i in range(len(BTC_Module.volume) - 1)]
+v_red, v_redP, v_green, v_greenP = separate(volumeC, np.arange(len(volumeC)))
+vol_corr = Corr(volumeC, priceC)
+n = np.arange(len(priceC))
 fig = plt.subplots()
 ax1 = plt.subplot(1,3,1)
-ax1.bar(n, dji_int_values, align= 'edge')
-plt.ylabel('Values')
+ax1.bar(d_redP, d_red, color= 'r', align= 'edge')
+ax1.bar(d_greenP, d_green, color= 'g', align= 'edge')
+plt.ylabel('Change')
 plt.title('DJI VS. Price')
 ax2 = ax1.twinx()
-ax2.plot(n, dji_corr, 'r-.', label= 'Correlation')
+ax2.plot(n, dji_corr, 'y-.', linewidth= 1.5,  label= 'Correlation')
 plt.xlabel('Date')
 plt.xticks(BTC_Module.tickPos, BTC_Module.date, rotation= 70)
 plt.legend()
 ax3 = plt.subplot(1,3,2)
-ax3.bar(n, nas_int_values, align= 'edge')
-plt.ylabel('Values')
+ax3.bar(n_redP, n_red, color= 'r', align= 'edge')
+ax3.bar(n_greenP, n_green, color= 'g', align= 'edge')
+plt.ylabel('Changes')
 plt.title('NASDAQ VS. Price')
 ax4 = ax3.twinx()
-ax4.plot(n, nas_corr, 'r-.', label= 'Correlation')
+ax4.plot(n, nas_corr, 'y-.', linewidth= 1.5,  label= 'Correlation')
 plt.xlabel('Date')
 plt.xticks(BTC_Module.tickPos, BTC_Module.date, rotation= 70)
 plt.legend()
 ax5 = plt.subplot(1,3,3)
-ax5.bar(n, BTC_Module.volume, align= 'edge')
+ax5.bar(v_redP, v_red, color= 'r', align= 'edge')
+ax5.bar(v_greenP, v_green, color= 'g', align= 'edge')
 plt.ylabel('Values')
 plt.title('Volume VS. Price')
 ax6 = ax5.twinx()
-ax6.plot(n, vol_corr, 'r-.', label= 'Correlation')
+ax6.plot(n, vol_corr, 'y-.', linewidth= 1.5,  label= 'Correlation')
 plt.xlabel('Date')
 plt.xticks(BTC_Module.tickPos, BTC_Module.date, rotation= 70)
 plt.legend()
 plt.show()
 plt.suptitle('Correlation with Major Stocks')
 
-print(BTC_Module.price)
-print(BTC_Module.avePrice)
+# print(BTC_Module.price)
+# print(BTC_Module.avePrice)
