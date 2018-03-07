@@ -73,7 +73,7 @@ class DataAnalysis(object):
         self.perc, self.pos = self.raiseOrfall(self.avePrice)
         self.volume = [1e-5 * p for p in self.volume]
         self.r, self.rPos, self.d, self.dPos = self.separate(self.perc, self.pos)
-        # self.prediction = self.AutoRegressive(self.price, self.testSize, self.test)
+        self.prediction = self.AutoRegressive(self.price, self.testSize, self.test)
         self.price = [1e5 * p for p in self.price]
     def AutoRegressive(self, data, testSize=2, test=True):
         # Autoregressive model used for time-series predictions
@@ -100,7 +100,7 @@ class DataAnalysis(object):
                 y += coeff[n + 1] * x[winSize - (n + 1)]
             if test:
                 # use test data to predict future value
-                predData.append(testData[i])
+                predData.append(y)
             else:
                 # use predicted value to predict future value
                 predData.append(y)
@@ -221,7 +221,7 @@ class DataAnalysis(object):
         # minLevel = self.price[minPts[-1]]
         # return maxLevel, minLevel
 
-#    def display(self):
+    def display(self):
         plt.figure(1)
         # Price polt
         # Original price, averaged price and its fitting curve
@@ -277,7 +277,7 @@ class DataAnalysis(object):
             n = np.arange(len(pred))
             plt.plot(n, testData, 'b-', label='Real price')
             plt.plot(n, pred, 'r-', label='Prediction')
-            plt.title('Price prediction with error= %.2f' % error)
+            plt.title('Price prediction')
             plt.xlabel('Time / days')
             plt.ylabel('Price / USD')
             plt.legend()
@@ -302,8 +302,8 @@ Period = '_Half_year'
 fname = Path + Currency + Period + '_data.csv'
 Files = pd.read_csv(fname)
 closePrice, openPrice, Volume, date = Files['close'].values, Files['open'].values, Files['volumefrom'].values, Files['timeDate'].values
-BTC_Module = DataAnalysis(date, closePrice, openPrice, Volume)
-
+BTC_Module = DataAnalysis(date, closePrice, openPrice, Volume, testSize = 7)
+BTC_Module.display()
 Path = './' # Please use path based on current dir
 Currency = 'DASH'
 Period = '_Half_year'
@@ -335,6 +335,7 @@ fname = Path + Currency + Period + '_data.csv'
 Files = pd.read_csv(fname)
 closePrice, openPrice, Volume, date = Files['close'].values, Files['open'].values, Files['volumefrom'].values, Files['timeDate'].values
 ZEC_Module = DataAnalysis(date, closePrice, openPrice, Volume)
+
 ################################################################################
 def monthlyPrice(Module, period):
     assert isinstance(period, int)
@@ -373,15 +374,15 @@ months = generate()
 ax1.fill_between(n, BTC_Module.price, len(BTC_Module.price) * [0], facecolor= 'k', alpha= 0.3)
 ax1.plot(n, BTC_Module.avePrice, 'r--', label= 'BTC Average Price')
 ax1.plot(n, BTC_Module.fitValue, 'b-', label= 'BTC Fitting Curve')
-ax1.plot(months, BTC_monthly, 'g-o', label= 'BTC Monthly Averaging')
+# ax1.plot(months, BTC_monthly, 'g-o', label= 'BTC Monthly Averaging')
 plt.ylim([0, 20000])
 plt.ylabel('Price / USD')
 plt.legend()
-ax2 = ax1.twinx()
-ax2.bar(p_redP, p_red, color= 'r', align= 'edge')
-ax2.bar(p_greenP, p_green, color= 'g', align= 'edge')
-
-ax2.grid(True)
+# ax2 = ax1.twinx()
+# ax2.bar(p_redP, p_red, color= 'r', align= 'edge', label= 'Raise')
+# ax2.bar(p_greenP, p_green, color= 'g', align= 'edge', label= 'Fall')
+# plt.legend()
+# ax2.grid(True)
 plt.title('Price Analysis for BTC')
 plt.xlabel('Date')
 plt.xticks(BTC_Module.tickPos, BTC_Module.date, rotation= 70)
@@ -432,7 +433,27 @@ nas_new_n = np.linspace(0, len(nas_values) - 1, len(n))
 nas_int_values = f_dji(nas_new_n)
 nas_int_valuesC = [nas_int_values[i+1] - nas_int_values[i] for i in range(len(nas_int_values) - 1)]
 n_red, n_redP, n_green, n_greenP = separate(nas_int_valuesC, np.arange(len(nas_int_valuesC)))
-
+print(type(p_green))
+fig = plt.figure()
+# ax = fig.add_subplot(111, projection= '3d')
+ax = fig.gca()
+ax.bar(p_redP, p_red, color= 'r', align= 'edge', label= 'raise', alpha= 0.6)
+ax.bar(p_greenP, p_green, color= 'g', align= 'edge', label= 'fall', alpha= 0.6)
+ax.zdir = 'y'
+# print(type(len(BTC_Module.varPrice)))
+varianceC = [BTC_Module.varPrice[i+1] - BTC_Module.varPrice[i] for i in range(len(BTC_Module.varPrice) - 1)]
+plt.ylabel('Price / USD')
+plt.legend()
+ax1 = ax.twinx()
+ax1.plot(list(range(len(BTC_Module.varPrice) - 1)), list(varianceC), color= 'y', label= 'Change of Variance')
+plt.title('Price change and Variance')
+plt.xlabel('Date')
+plt.xticks(BTC_Module.tickPos, BTC_Module.date)
+plt.ylim([-2000, 3000])
+plt.ylabel('Price / USD')
+plt.grid(True)
+plt.legend()
+plt.show()
 # nas_corr = []
 # for i in range(len(n)):
 #     iCorr = np.correlate(nas_int_values / np.linalg.norm(dji_int_values), BTC_Module.price / np.linalg.norm(BTC_Module.price))
@@ -476,5 +497,9 @@ plt.legend()
 plt.show()
 plt.suptitle('Correlation with Major Stocks')
 
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection= '3d')
+# for c, z in zip(['r', 'g', 'b', 'y', 'k'], [0, 10, 20, 30, 40]):
+#     xs =
 # print(BTC_Module.price)
 # print(BTC_Module.avePrice)
