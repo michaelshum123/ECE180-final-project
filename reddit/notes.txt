@@ -1,0 +1,81 @@
+USING RidgeRegression
+
+ngrams(1,3)
+MSE on train tfidf:7.45263550850478e-08
+MSE on test tfidf:6.284319379922579e-07
+
+top 10 weights
+doge 0.000540792922933
+udogetipbot 0.000362643105637
+wow wow wow 0.000230234767714
+doge verify 0.00018441118969
+uthetipdoubler 0.000176368223058
+anxprohttpsanxprocom 0.000150368481291
+u5ymm 0.000140504582679
+wow verify uthetipdoubler 0.000139641669175
+verify uthetipdoubler gt 0.000139641669175
+verify uthetipdoubler 0.000139641669175
+bottom 10 weights
+like -8.74873107854e-05
+client -8.93216906744e-05
+blockchain -9.4442014282e-05
+cc -9.58329551119e-05
+signed -0.000109114607764
+gt uzimonitrome -0.000111175854348
+uzimonitrome -0.000111864372324
+gt -0.000126364822676
+helphttpwwwredditcomrdogetipbotwikiindex -0.000128071396635
+wow verify -0.000128082631294
+
+
+ngrams(1,2)
+MSE on train tfidf:7.59353168033481e-08
+MSE on test tfidf:6.248266767878482e-07
+top 10 weights
+doge 0.00055856190816
+udogetipbot 0.000371614859226
+uthetipdoubler 0.000195308473841
+doge verify 0.00019106414397
+verify uthetipdoubler 0.000156004841402
+uthetipdoubler gt 0.000156004841402
+anxprohttpsanxprocom 0.000155609427749
+wow wow 0.00015085933129
+u5ymm 0.000138657437695
+20 doge 0.000101841668472
+bottom 10 weights
+helphttpwwwredditcomrdogetipbotwikiindex udogetipbot -8.81300517656e-05
+client -9.02684575985e-05
+blockchain -9.51251727304e-05
+cc -9.60204365052e-05
+gt uzimonitrome -0.000112086559075
+uzimonitrome -0.000112494022344
+signed -0.000114111344393
+gt -0.000125048510885
+helphttpwwwredditcomrdogetipbotwikiindex -0.000126771608632
+wow verify -0.000126783483068
+
+MSE on train tfidf:7.795046713442206e-08
+MSE on test tfidf:6.27122029998456e-07
+top 10 weights
+doge 0.000576284583027
+udogetipbot 0.000391783359325
+uthetipdoubler 0.000226420561279
+anxprohttpsanxprocom 0.000150088403309
+u5ymm 0.000149052452851
+bariner 0.000136454227373
+fork 9.80950477942e-05
+tip 9.47142132693e-05
+shibes 9.37941613514e-05
+uspacecadet06 9.20261720183e-05
+bottom 10 weights
+dogs -9.09152600908e-05
+moon -9.11098664219e-05
+donated -9.32299418949e-05
+cc -9.74833835205e-05
+ustuartpbentley -0.000100846527562
+ulleti -0.000111268951323
+signed -0.000122665846959
+uzimonitrome -0.000132105780126
+helphttpwwwredditcomrdogetipbotwikiindex -0.000156693521732
+gt -0.000158410998689
+
